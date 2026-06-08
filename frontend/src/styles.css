@@ -116,6 +116,8 @@ button.ghost.on { border-color: var(--accent); color: var(--accent); }
 .cand .curl { font-family: ui-monospace, monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .cand .crow button { padding: 4px 10px; font-size: 11px; }
 .cand .cmeta { font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.cand.unverified { border-style: dashed; opacity: .8; }
+.cand.unverified .crow button { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 
 /* Preview table */
 .ptable { overflow: auto; max-height: 260px; border: 1px solid var(--line); border-radius: 10px; }

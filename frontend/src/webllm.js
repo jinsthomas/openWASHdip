@@ -3,7 +3,7 @@
 // (/api/verify) confirms each actually returns records before any are shown.
 
 let enginePromise = null;
-const MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC"; // ~0.9 GB, cached after first load
+const MODEL = "Llama-3.2-3B-Instruct-q4f16_1-MLC"; // ~2 GB, cached after first load; stronger recall than 1B
 
 export function webgpuAvailable() {
   return typeof navigator !== "undefined" && "gpu" in navigator;

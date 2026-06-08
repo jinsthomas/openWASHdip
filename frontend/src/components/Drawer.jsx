@@ -85,10 +85,17 @@ function SourceCfg({ pipeline, setPipeline }) {
     try {
       const urls = await suggestEndpoints(find.trim(), (t) => setProgress(t));
       setProgress("");
+      if (!urls.length) { setMsg("The model didn't return any URLs — try rephrasing."); setBusy(false); return; }
       setMsg(`AI proposed ${urls.length} URL(s) — verifying…`);
       const { candidates } = await api.verify(urls);
-      setCands(candidates);
-      setMsg(candidates.length ? `${candidates.length} of ${urls.length} verified.` : "None of the AI's suggestions returned data — try rephrasing.");
+      // Show ALL the model's suggestions: verified ones first, then the rest (try/edit).
+      const vmap = new Map(candidates.map((c) => [c.url, c]));
+      const merged = urls.map((u) => vmap.get(u) || { url: u, unverified: true });
+      merged.sort((a, b) => (a.unverified ? 1 : 0) - (b.unverified ? 1 : 0));
+      setCands(merged);
+      setMsg(candidates.length
+        ? `${candidates.length} of ${urls.length} returned data ✓`
+        : `${urls.length} suggested, none returned data directly — try or edit one below.`);
     } catch (e) { setProgress(""); setMsg(""); setErr(setMsg, e); }
     setBusy(false);
   }
@@ -129,7 +136,7 @@ function SourceCfg({ pipeline, setPipeline }) {
         <div style={{ marginTop: 8 }}>
           <input value={find} placeholder="e.g. water points in Kenya, air quality sensors" onChange={(e) => setFind(e.target.value)} />
           <button style={{ marginTop: 8 }} onClick={runAI} disabled={busy || !find.trim()}>Suggest with in-browser AI</button>
-          <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>Runs a small open model in your browser (WebGPU, no key). First use downloads ~0.9 GB, then cached.</div>
+          <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>Runs an open model (Llama-3.2-3B) in your browser (WebGPU, no key). First use downloads ~2 GB, then cached.</div>
           {progress && <div className="msg">⏳ {progress}</div>}
         </div>
       )}
@@ -137,10 +144,13 @@ function SourceCfg({ pipeline, setPipeline }) {
       {cands.length > 0 && (
         <div className="cands">
           {cands.map((c, i) => (
-            <div className="cand" key={i}>
+            <div className={"cand" + (c.unverified ? " unverified" : "")} key={i}>
               <div className="crow"><span className="curl" title={c.url}>{c.url}</span>
-                <button onClick={() => { setTool(null); setCands([]); inspect(c.url); }}>Use</button></div>
-              <div className="cmeta">{c.count} records · {(c.fields || []).slice(0, 6).join(", ")}</div>
+                <button onClick={() => { const u = c.url; setTool(null); setCands([]); setPipeline((p) => ({ ...p, source: { ...p.source, url: u } })); inspect(u); }}>
+                  {c.unverified ? "Try" : "Use"}</button></div>
+              <div className="cmeta">
+                {c.unverified ? "AI suggested — didn't return data directly; try it or edit the URL" : `${c.count} records · ${(c.fields || []).slice(0, 6).join(", ")}`}
+              </div>
             </div>
           ))}
         </div>
