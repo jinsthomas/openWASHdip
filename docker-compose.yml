@@ -19,5 +19,19 @@ services:
       timeout: 5s
       retries: 10
 
+  # The app. `docker compose up` brings up db + app together. For DB-only local dev,
+  # run `docker compose up -d db` and start uvicorn on the host instead.
+  app:
+    build: .
+    container_name: openwashdip-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://openwashdip:openwashdip@db:5432/openwashdip
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
 volumes:
   openwashdip_pgdata:

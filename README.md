@@ -47,6 +47,17 @@ downstream.
 
 ## Quickstart
 
+### One command (Docker)
+
+Requires Docker only. Builds the UI, starts Postgres+PostGIS and the app:
+
+```bash
+docker compose up --build
+# open http://127.0.0.1:8000/
+```
+
+### Local development
+
 Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), Docker, and Node 18+ (to build the UI).
 
 ```bash
