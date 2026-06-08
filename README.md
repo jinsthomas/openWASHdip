@@ -92,6 +92,8 @@ Map**, or **🌐 All data** for the cross-source view.
 See **[DEMO.md](DEMO.md)** for a full presenter walkthrough, and
 `scripts/demo_preflight.sh` to bring everything up (`--reset` for a clean slate).
 
+To run it on a server, see **[DEPLOY.md](DEPLOY.md)**.
+
 ## Architecture
 
 - **`db.py`** — engine/session; reads `DATABASE_URL` (one line to point at a remote Postgres).
