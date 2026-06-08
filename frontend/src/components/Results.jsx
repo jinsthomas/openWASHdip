@@ -3,7 +3,8 @@ import { api } from "../api.js";
 import Charts from "./Charts.jsx";
 
 export default function Results({ source, onClose }) {
-  const [tab, setTab] = useState("table");
+  const heatmap = source.config?.render === "heatmap";
+  const [tab, setTab] = useState(heatmap ? "map" : "table");
   const [data, setData] = useState({ records: [], total: 0 });
   const mapRef = useRef(null);
   const mapObj = useRef(null);
@@ -19,6 +20,18 @@ export default function Results({ source, onClose }) {
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(m);
     api.geojson(source.id).then((gj) => {
       if (!gj.features.length) return;
+      if (heatmap && window.L.heatLayer) {
+        // Dense population grid -> a heatmap weighted by the chosen value (e.g. population).
+        const w = source.config.weight;
+        const vals = gj.features.map((f) => (w ? Number(f.properties?.[w]) || 0 : 1));
+        const max = Math.max(...vals, 1);
+        const pts = gj.features.map((f, i) => [
+          f.geometry.coordinates[1], f.geometry.coordinates[0], Math.min(1, Math.sqrt(vals[i] / max)),
+        ]);
+        window.L.heatLayer(pts, { radius: 16, blur: 20, maxZoom: 9 }).addTo(m);
+        m.fitBounds(window.L.latLngBounds(pts.map((p) => [p[0], p[1]])), { maxZoom: 6 });
+        return;
+      }
       const layer = window.L.geoJSON(gj, {
         pointToLayer: (f, ll) => window.L.circleMarker(ll, { radius: 5, color: "#38bdf8", fillOpacity: 0.7 }),
         onEachFeature: (f, l) => l.bindPopup("<pre style='margin:0'>" + JSON.stringify(f.properties, null, 1) + "</pre>"),
@@ -26,7 +39,7 @@ export default function Results({ source, onClose }) {
       m.fitBounds(layer.getBounds(), { maxZoom: 8 });
     });
     return () => { m.remove(); mapObj.current = null; };
-  }, [tab, source.id]);
+  }, [tab, source.id, heatmap]);
 
   const cols = data.records[0] ? Object.keys(data.records[0]) : [];
 

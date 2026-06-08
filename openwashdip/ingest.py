@@ -154,6 +154,15 @@ def pull_records(
     return _map_records(config, raw, _norm_country(cc) if cc else None, limit)
 
 
+def pull(config: dict, session: Optional[requests.Session] = None, limit: Optional[int] = None) -> list[dict]:
+    """Dispatch to the right puller based on the source kind."""
+    if config.get("kind") == "worldpop-grid":
+        from .worldpop import pull_worldpop_grid
+
+        return pull_worldpop_grid(config, limit=limit)
+    return pull_records(config, session=session, limit=limit)
+
+
 def sync_source(db: Session, source: Source) -> SyncRun:
     """Run one full sync: pull, replace this source's rows, update status + history."""
     run = SyncRun(source_id=source.id, status="running")
@@ -161,7 +170,7 @@ def sync_source(db: Session, source: Source) -> SyncRun:
     db.commit()
 
     try:
-        rows = pull_records(source.config)
+        rows = pull(source.config)
         # Replace strategy: clear prior rows for this source, then insert the fresh pull.
         db.execute(delete(Record).where(Record.source_id == source.id))
         for row in rows:

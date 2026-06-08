@@ -96,8 +96,24 @@ function Flow() {
     setTimeout(() => fitView({ duration: 300 }), 50);
   }
 
+  // Special sources (e.g. WorldPop grid) aren't editable point-mappings — create + show directly.
+  async function createSpecial(entry) {
+    setToast(`Loading “${entry.name}” … (downloading & binning, may take ~30–60s)`);
+    try {
+      const s = await api.createSource({ slug: entry.slug, title: entry.name, config: entry.config, interval_minutes: null });
+      await refreshSources(); setCurrentSourceId(s.id); setResults(s); setToast("");
+    } catch (e) {
+      if (String(e.message).includes("already exists")) {
+        const ex = (await api.listSources()).find((x) => x.slug === entry.slug);
+        if (ex) { setResults(ex); setToast(""); return; }
+      }
+      setToast("⚠ " + e.message);
+    }
+  }
+
   // Load a curated catalog source (verified preset) onto the canvas, ready to Run.
   function openPreset(entry) {
+    if ((entry.config?.kind || "rest-points") !== "rest-points") { createSpecial(entry); return; }
     setPipeline(sourceToPipeline({ config: entry.config, slug: entry.slug, title: entry.name, interval_minutes: null }));
     setHasFilter(false);
     setStatus({});

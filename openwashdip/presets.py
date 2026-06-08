@@ -85,6 +85,25 @@ CATALOG: list[dict] = [
     _osm_preset("mdg-health-osm", "Madagascar — Health facilities", "Madagascar", "MDG", "MG", _HEALTH, "Health", "health facilities"),
     _osm_preset("ago-health-osm", "Angola — Health facilities", "Angola", "AGO", "AO", _HEALTH, "Health", "health facilities"),
     {
+        "id": "worldpop-grid-mdg-ago",
+        "name": "WorldPop — Population grid (Madagascar & Angola)",
+        "category": "Population",
+        "description": "WorldPop 1km population density binned to a point grid, rendered as a heatmap. Madagascar & Angola.",
+        "slug": "worldpop-grid-mdg-ago",
+        "keywords": ["worldpop", "population", "density", "grid", "raster", "people"],
+        "config": {
+            "kind": "worldpop-grid",
+            "bin_deg": 0.1,
+            "year": 2020,
+            "render": "heatmap",
+            "weight": "population",
+            "countries": [
+                {"iso3": "MDG", "url": "https://data.worldpop.org/GIS/Population/Global_2000_2020_1km/2020/MDG/mdg_ppp_2020_1km_ASCII_XYZ.zip"},
+                {"iso3": "AGO", "url": "https://data.worldpop.org/GIS/Population/Global_2000_2020_1km/2020/AGO/ago_ppp_2020_1km_ASCII_XYZ.zip"},
+            ],
+        },
+    },
+    {
         "id": "worldbank-population",
         "name": "World Bank — Population by country",
         "category": "Population",

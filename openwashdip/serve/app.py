@@ -148,8 +148,8 @@ def api_create_source(payload: dict = Body(...), db: Session = Depends(get_sessi
     if db.scalar(select(Source).where(Source.slug == slug)):
         raise HTTPException(status_code=409, detail=f"source '{slug}' already exists")
     config = payload.get("config") or {}
-    # Only the records path is essential; lat/lon are optional (table-only sources are valid).
-    if not config.get("records_path"):
+    # rest-points sources need a records_path; other kinds (e.g. worldpop-grid) don't.
+    if config.get("kind", "rest-points") == "rest-points" and not config.get("records_path"):
         raise HTTPException(status_code=400, detail="config.records_path is required")
 
     source = Source(
@@ -348,7 +348,9 @@ def api_runs(sid: int, limit: int = 20, db: Session = Depends(get_session)) -> l
 # query/chart/map ALL loaded sources together.
 
 def _unified_where(source: int | None, country: str | None, year: str | None, params: dict) -> str:
-    clauses = []
+    # Dense grid layers (e.g. WorldPop) are a heatmap, not comparable point records — exclude
+    # them from the unified record views so they don't swamp the cross-source comparison.
+    clauses = ["s.kind <> 'worldpop-grid'"]
     if source:
         clauses.append("r.source_id = :u_source")
         params["u_source"] = source
@@ -358,13 +360,19 @@ def _unified_where(source: int | None, country: str | None, year: str | None, pa
     if year:
         clauses.append("to_char(r.event_time, 'YYYY') = :u_year")
         params["u_year"] = year
-    return (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    return " WHERE " + " AND ".join(clauses)
 
 
 @app.get("/api/unified/filters", tags=["unified"])
 def api_unified_filters(db: Session = Depends(get_session)) -> dict:
-    sources = [{"id": s.id, "title": s.title} for s in db.scalars(select(Source).order_by(Source.title)).all()]
-    countries = [r[0] for r in db.execute(text("SELECT DISTINCT country FROM records WHERE country IS NOT NULL ORDER BY 1")).all()]
+    sources = [
+        {"id": s.id, "title": s.title}
+        for s in db.scalars(select(Source).where(Source.kind != "worldpop-grid").order_by(Source.title)).all()
+    ]
+    countries = [r[0] for r in db.execute(text(
+        "SELECT DISTINCT r.country FROM records r JOIN sources s ON s.id=r.source_id "
+        "WHERE r.country IS NOT NULL AND s.kind <> 'worldpop-grid' ORDER BY 1"
+    )).all()]
     years = [r[0] for r in db.execute(text(
         "SELECT DISTINCT to_char(event_time,'YYYY') y FROM records WHERE event_time IS NOT NULL ORDER BY y DESC"
     )).all()]
@@ -374,8 +382,9 @@ def api_unified_filters(db: Session = Depends(get_session)) -> dict:
 @app.get("/api/unified/summary", tags=["unified"])
 def api_unified_summary(db: Session = Depends(get_session)) -> dict:
     row = db.execute(text(
-        "SELECT count(*) recs, count(DISTINCT source_id) srcs, count(DISTINCT country) ctys, "
-        "min(event_time) tmin, max(event_time) tmax FROM records"
+        "SELECT count(*) recs, count(DISTINCT r.source_id) srcs, count(DISTINCT r.country) ctys, "
+        "min(r.event_time) tmin, max(r.event_time) tmax FROM records r JOIN sources s ON s.id=r.source_id "
+        "WHERE s.kind <> 'worldpop-grid'"
     )).one()
     return {
         "records": row.recs, "sources": row.srcs, "countries": row.ctys,
