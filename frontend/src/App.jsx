@@ -247,7 +247,7 @@ function Flow() {
             <Background color="#c3cee0" gap={20} />
             <Controls showInteractive={false} />
           </ReactFlow>
-          {selected && <Drawer nodeId={selected} pipeline={pipeline} setPipeline={setPipeline} onClose={() => setSelected(null)} />}
+          {selected && <Drawer nodeId={selected} pipeline={pipeline} setPipeline={setPipeline} catalog={catalog} onLoadPreset={openPreset} onClose={() => setSelected(null)} />}
         </div>
       </div>
 

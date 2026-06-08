@@ -90,6 +90,7 @@ CATALOG: list[dict] = [
         "category": "Population",
         "description": "Total population by country (latest year) from the World Bank Open Data API (no key). Tabular — no map.",
         "slug": "worldbank-population",
+        "keywords": ["population", "worldbank", "demographics", "people", "census"],
         "config": {
             "kind": "rest-points",
             "request": {

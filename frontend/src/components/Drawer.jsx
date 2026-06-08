@@ -6,7 +6,7 @@ import { suggestEndpoints, webgpuAvailable } from "../webllm.js";
 const ICONS = { trigger: "⏰", source: "🌐", map: "🔀", filter: "🔎", database: "🗄" };
 const TITLES = { trigger: "Trigger", source: "Source", map: "Map fields", filter: "Filter", database: "Database" };
 
-export default function Drawer({ nodeId, pipeline, setPipeline, onClose }) {
+export default function Drawer({ nodeId, pipeline, setPipeline, catalog, onLoadPreset, onClose }) {
   return (
     <div className="drawer">
       <div className="dhead">
@@ -16,7 +16,7 @@ export default function Drawer({ nodeId, pipeline, setPipeline, onClose }) {
       </div>
       <div className="dbody">
         {nodeId === "trigger" && <TriggerCfg pipeline={pipeline} setPipeline={setPipeline} />}
-        {nodeId === "source" && <SourceCfg pipeline={pipeline} setPipeline={setPipeline} />}
+        {nodeId === "source" && <SourceCfg pipeline={pipeline} setPipeline={setPipeline} catalog={catalog || []} onLoadPreset={onLoadPreset} />}
         {nodeId === "map" && <MapCfg pipeline={pipeline} setPipeline={setPipeline} />}
         {nodeId === "filter" && <FilterCfg pipeline={pipeline} setPipeline={setPipeline} />}
         {nodeId === "database" && <DatabaseCfg pipeline={pipeline} setPipeline={setPipeline} />}
@@ -43,7 +43,25 @@ function TriggerCfg({ pipeline, setPipeline }) {
   );
 }
 
-function SourceCfg({ pipeline, setPipeline }) {
+// Match a typed name against the known-source catalog (deterministic, no LLM).
+function matchCatalog(q, catalog) {
+  const t = (q || "").toLowerCase().trim();
+  if (!t) return [];
+  const toks = t.split(/\s+/).filter((w) => w.length > 2);
+  return catalog
+    .map((e) => {
+      const hay = `${e.name} ${e.description} ${e.slug} ${(e.keywords || []).join(" ")}`.toLowerCase();
+      let score = hay.includes(t) ? 5 : 0;
+      toks.forEach((w) => { if (hay.includes(w)) score += 1; });
+      return { e, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map((x) => x.e);
+}
+
+function SourceCfg({ pipeline, setPipeline, catalog, onLoadPreset }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [tool, setTool] = useState(null); // null | 'discover' | 'ai'
@@ -80,8 +98,17 @@ function SourceCfg({ pipeline, setPipeline }) {
   }
 
   async function runAI() {
-    if (!webgpuAvailable()) { setMsg("⚠ This browser has no WebGPU. Use Chrome/Edge, or try “Suggest from URL.”"); return; }
-    setBusy(true); setCands([]); setProgress(""); setMsg("");
+    setCands([]); setProgress(""); setMsg("");
+    // 1) Known sources first — deterministic, reliable, no model needed.
+    const known = matchCatalog(find, catalog);
+    if (known.length) {
+      setCands(known.map((e) => ({ known: true, entry: e, name: e.name, desc: e.description })));
+      setMsg(`Matched ${known.length} known source(s) in the catalog.`);
+      return;
+    }
+    // 2) Otherwise ask the in-browser model.
+    if (!webgpuAvailable()) { setMsg("⚠ Not a known source, and this browser has no WebGPU for the AI search. Use Chrome/Edge, or try “Suggest from URL.”"); return; }
+    setBusy(true);
     try {
       const urls = await suggestEndpoints(find.trim(), (t) => setProgress(t));
       setProgress("");
@@ -143,7 +170,13 @@ function SourceCfg({ pipeline, setPipeline }) {
 
       {cands.length > 0 && (
         <div className="cands">
-          {cands.map((c, i) => (
+          {cands.map((c, i) => c.known ? (
+            <div className="cand known" key={i}>
+              <div className="crow"><span className="curl">⭐ {c.name}</span>
+                <button onClick={() => onLoadPreset && onLoadPreset(c.entry)}>Load</button></div>
+              <div className="cmeta">{c.desc}</div>
+            </div>
+          ) : (
             <div className={"cand" + (c.unverified ? " unverified" : "")} key={i}>
               <div className="crow"><span className="curl" title={c.url}>{c.url}</span>
                 <button onClick={() => { const u = c.url; setTool(null); setCands([]); setPipeline((p) => ({ ...p, source: { ...p.source, url: u } })); inspect(u); }}>
