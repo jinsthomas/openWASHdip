@@ -30,6 +30,7 @@ body { background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple
 .catitem .cat.wash { color: #0369a1; border-color: #7dd3fc; background: #e0f2fe; }
 .catitem .cat.hazard { color: #b45309; border-color: #fcd34d; background: #fef3c7; }
 .catitem .cat.health { color: #be185d; border-color: #f9a8d4; background: #fce7f3; }
+.catitem .cat.population { color: #6d28d9; border-color: #c4b5fd; background: #ede9fe; }
 .catitem .cdesc { font-size: 10.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
 .palette h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
 .palette .pnode {

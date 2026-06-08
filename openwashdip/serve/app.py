@@ -148,9 +148,9 @@ def api_create_source(payload: dict = Body(...), db: Session = Depends(get_sessi
     if db.scalar(select(Source).where(Source.slug == slug)):
         raise HTTPException(status_code=409, detail=f"source '{slug}' already exists")
     config = payload.get("config") or {}
-    for field in ("records_path", "lat_path", "lon_path"):
-        if not config.get(field):
-            raise HTTPException(status_code=400, detail=f"config.{field} is required")
+    # Only the records path is essential; lat/lon are optional (table-only sources are valid).
+    if not config.get("records_path"):
+        raise HTTPException(status_code=400, detail="config.records_path is required")
 
     source = Source(
         slug=slug,

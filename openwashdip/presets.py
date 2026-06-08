@@ -85,6 +85,26 @@ CATALOG: list[dict] = [
     _osm_preset("mdg-health-osm", "Madagascar — Health facilities", "Madagascar", "MDG", "MG", _HEALTH, "Health", "health facilities"),
     _osm_preset("ago-health-osm", "Angola — Health facilities", "Angola", "AGO", "AO", _HEALTH, "Health", "health facilities"),
     {
+        "id": "worldbank-population",
+        "name": "World Bank — Population by country",
+        "category": "Population",
+        "description": "Total population by country (latest year) from the World Bank Open Data API (no key). Tabular — no map.",
+        "slug": "worldbank-population",
+        "config": {
+            "kind": "rest-points",
+            "request": {
+                "url": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL",
+                "params": {"format": "json", "per_page": "400", "date": "2022"},
+            },
+            "records_path": "1",  # World Bank wraps records: [metadata, [records]]
+            "lat_path": "",
+            "lon_path": "",
+            "country_path": "countryiso3code",
+            "time_path": "date",
+            "property_paths": {"population": "value", "country_name": "country.value"},
+        },
+    },
+    {
         "id": "wpdx-water-points",
         "name": "WPDx — Water points",
         "category": "WASH",
