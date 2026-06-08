@@ -96,6 +96,9 @@ To run it on a server, see **[DEPLOY.md](DEPLOY.md)**.
 
 ## Architecture
 
+For the full design, data model, API reference, and feature list, see
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
 - **`db.py`** — engine/session; reads `DATABASE_URL` (one line to point at a remote Postgres).
 - **`models.py`** — canonical schema: `Source`, `Record` (conformed `country` + `event_time`,
   PostGIS point, JSONB properties), `SyncRun`.
