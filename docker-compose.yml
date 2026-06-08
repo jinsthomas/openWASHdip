@@ -1,0 +1,23 @@
+# Standalone Postgres + PostGIS for openWASHdip.
+# Local dev: `docker compose up -d db`. Point the app at it via DATABASE_URL (.env).
+# Swap to a remote Postgres later by changing DATABASE_URL only — nothing else.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: openwashdip-db
+    environment:
+      POSTGRES_USER: openwashdip
+      POSTGRES_PASSWORD: openwashdip
+      POSTGRES_DB: openwashdip
+    ports:
+      - "5432:5432"
+    volumes:
+      - openwashdip_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openwashdip -d openwashdip"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  openwashdip_pgdata:

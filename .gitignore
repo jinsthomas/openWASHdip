@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# uv
+.uv/
+
+# node / frontend build deps
+node_modules/
+frontend/node_modules/
+
+# secrets / local config
+.env
+
+# generated catalogs / data
+/stac/
+/data/
+*.tif
+*.tiff
+
+# editor / OS
+.DS_Store
+.vscode/
+.idea/
