@@ -42,7 +42,7 @@ def _osm_preset(pid, name, country_name, iso3, area_code, osm_filters, category,
 
 
 _WATER = ['["amenity"="drinking_water"]', '["man_made"="water_well"]', '["amenity"="water_point"]', '["man_made"="borehole"]']
-_HEALTH = ['["amenity"="clinic"]', '["amenity"="hospital"]', '["amenity"="doctors"]', '["healthcare"]']
+_HEALTH = ['["amenity"="clinic"]', '["amenity"="hospital"]', '["amenity"="doctors"]', '["healthcare"~"hospital|clinic|centre|doctor|health"]']
 
 
 def _osm_query(area_code: str, osm_filters: list[str]) -> str:

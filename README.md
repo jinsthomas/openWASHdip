@@ -16,6 +16,14 @@ The whole stack is OSI-licensed open source and runs with **no API keys required
                catalog src                         canonical table)
 ```
 
+## Screenshots
+
+| Visual pipeline + source catalog | AI-assisted column mapping |
+|---|---|
+| ![canvas](docs/screenshots/01-canvas.png) | ![mapping](docs/screenshots/02-mapping.png) |
+| **Unified cross-source charts** | **Unified, source-colored map** |
+| ![charts](docs/screenshots/03-unified-charts.png) | ![map](docs/screenshots/04-unified-map.png) |
+
 ## Why this shape
 
 The canonical form is a **table**, not a map. Any source — water points, health
