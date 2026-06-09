@@ -80,6 +80,13 @@ A source's `config` is a JSON spec interpreted by `ingest.py` (kind `rest-points
 }
 ```
 
+**Source kinds.** Most sources are `rest-points` (the JSON-record flow above). A second kind,
+`worldpop-grid`, ingests WorldPop's 1km population grid: it downloads the ASCII-XYZ file per
+country, **bins it to a coarser point grid** (default ~0.1° summing population), and stores the
+cells as country-tagged point records — rendered as a **heatmap** (`render: "heatmap"`,
+`weight: "population"`). New kinds are dispatched by `ingest.pull()`. Dense grid sources are
+excluded from the unified cross-source views (they'd swamp the point sources).
+
 Notable capabilities:
 
 - **Dotted paths** with list indices (`geometry.coordinates.1`).
@@ -102,6 +109,7 @@ Curated, verified, no-key sources that load a correct workflow in one click:
 | Water points — Madagascar & Angola | WASH | OpenStreetMap (Overpass), multi-country |
 | Madagascar / Angola — single-country layers | WASH/Health | OpenStreetMap per country |
 | World Bank — Population by country | Population | Tabular population by country/year (no map) |
+| WorldPop — Population grid (Madagascar & Angola) | Population | 1km population binned to a point grid, rendered as a heatmap |
 | WPDx — Water points | WASH | Water Point Data Exchange (Socrata) |
 | USGS — Earthquakes (M4+) | Hazard | GeoJSON event feed |
 | GDACS — Disaster alerts | Hazard | Global disaster events |
@@ -199,20 +207,24 @@ adds new columns idempotently).
 ## 11. Record sources vs. raster sources
 
 This platform is built for **record/point/tabular** sources (water points, facilities, events,
-country indicators). **Raster** sources — gridded data like WorldPop population density or
-satellite imagery — are a different shape (pixels, not rows) and are **not** ingested into the
-records table. The original openWASHdip prototype handled rasters via COG + tile serving; the
-current redesign is table-first. Adding raster *map layers* back (e.g. WorldPop population
-density) is a planned, separable feature.
+country indicators). True **raster** data (satellite imagery, high-resolution grids) is a different
+shape — pixels, not rows — and is not ingested into the records table; the original prototype
+handled that via COG + tile serving, which the current table-first redesign removed.
+
+The **WorldPop** source bridges the gap pragmatically: rather than serve a raster, it **bins the
+1km grid into a coarse point grid** and stores it as ordinary records, then renders it as a
+**heatmap**. This keeps the table-first model (no GDAL/tile server) while still giving a
+population-density map. Full-resolution raster *layers* remain a possible future addition.
 
 ---
 
 ## 12. Roadmap
 
-- **Predictive analytics** — e.g. a water-point failure-risk model (classification on WASH
-  attributes → risk score + map coloring) and/or time-series forecasts.
-- **WorldPop raster layer** — population-density map (1km product, rendered client-side) as
-  context behind point data.
+- **Predictive / prescriptive analytics** *(in progress)* — an **access-gap analysis**
+  combining WorldPop population with health facilities (PostGIS nearest-neighbor) to surface
+  underserved high-population areas ("where to build the next clinic"). A water-point
+  failure-risk model is the alternative when WPDx is available.
 - **More source shapes** — pagination, CSV/Parquet, authenticated APIs.
 - **Incremental sync** — upsert by `external_id` instead of full replace.
 - **Filtering World Bank regional aggregates** to actual countries.
+- **Full-resolution raster layers** (optional) — server-side tiles for 100m WorldPop, etc.

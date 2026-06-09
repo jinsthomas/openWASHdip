@@ -10,7 +10,14 @@ Notable changes to openWASHdip. This is a prototype; versions are informal.
 - **AI field mapping** — heuristic proposer (no key) that maps an API's JSON to columns with
   role tags (id / lat / lon / time / country); optional LLM proposer.
 - **Standard-source catalog** — verified one-click sources: OpenStreetMap (Madagascar & Angola
-  health/water), WPDx, USGS, GDACS, World Bank population.
+  health/water), WPDx, USGS, GDACS, World Bank population, WorldPop population grid.
+- **WorldPop population heatmap** — 1km grid binned to a point grid (`worldpop-grid` source kind)
+  and rendered as a density heatmap; no GDAL/raster server. Dense grids are kept out of the
+  unified cross-source comparison.
+- **Table-only (non-geographic) sources** — geometry is optional; sources like World Bank
+  population land as a table with no map.
+- **Source-aware "Ask AI by name"** — matches the catalog first (deterministic), then falls back
+  to the in-browser model; shows unverified suggestions to try/edit.
 - **Endpoint discovery** — "From a URL" (scrape + OpenAPI + probe + verify) and "Ask AI by name"
   (in-browser WebLLM, Llama-3.2-3B, with catalog-first matching).
 - **Query parameters** editor (country/ISO filters, date ranges, limits).
@@ -28,6 +35,7 @@ Notable changes to openWASHdip. This is a prototype; versions are informal.
 - Released under the **Apache License 2.0**.
 
 ## Roadmap
-- Predictive analytics (water-point failure-risk model, time-series forecasts).
-- WorldPop raster population-density layer (1km, client-side).
+- Predictive/prescriptive analytics (access-gap: WorldPop × health facilities → underserved
+  areas; or a water-point failure-risk model when WPDx is available) — *in progress*.
 - More source shapes (pagination, CSV/Parquet, auth); incremental sync.
+- Filtering World Bank regional aggregates; optional full-resolution raster layers.

@@ -52,6 +52,8 @@ downstream.
 - **Charts** — drag-and-drop builder over the data: bar, line, area, pie, scatter, histogram.
 - **🌐 Unified "All data" view** — every source together, filterable by source / country /
   year, as a table, cross-source charts, and a source-colored map.
+- **WorldPop population heatmap** — 1km population grid binned to a point grid and rendered as a
+  density heatmap (no GDAL/tile server), alongside tabular national totals from the World Bank.
 
 ## Quickstart
 
@@ -104,6 +106,7 @@ For the full design, data model, API reference, and feature list, see
   PostGIS point, JSONB properties), `SyncRun`.
 - **`ingest.py`** — the trusted, spec-driven interpreter: fetch → normalize → upsert. No
   `eval`/`exec`, so AI-produced *specs* (not code) are safe to run.
+- **`worldpop.py`** — ingests WorldPop's 1km population grid as a binned point grid (heatmap).
 - **`ai.py`** — fetch a sample of an API and propose a mapping (heuristic or optional LLM).
 - **`discovery.py`** — find + verify candidate endpoints from a docs page or a name.
 - **`presets.py`** — the curated standard-source catalog.
