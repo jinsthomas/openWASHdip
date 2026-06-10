@@ -52,6 +52,19 @@ downstream.
 - **Charts** — drag-and-drop builder over the data: bar, line, area, pie, scatter, histogram.
 - **🌐 Unified "All data" view** — every source together, filterable by source / country /
   year, as a table, cross-source charts, and a source-colored map.
+- **📊 Dashboard** — a customizable widget board: KPI tiles, per-source health, recent sync
+  runs (incl. failures), cross-source charts, and a map. Add / remove / resize / drag-reorder
+  widgets; layout persists in the browser.
+- **🌵 Drought monitor** — a focused view over a keyless **Open-Meteo** source (daily
+  precipitation, evapotranspiration, soil moisture for drought-prone districts in Madagascar &
+  Angola). An indicative **dryness index**, severity map, time-series, and alerts.
+- **🔮 Predictive drought forecast** — a least-squares trend model projects the drought index
+  **14 days forward** with an uncertainty band and Moderate/Severe threshold crossings, plus a
+  per-location 7-day outlook (worsening / improving / stable). Explainable, not a black box.
+- **🔌 API access + CSV export** — every source is a live REST endpoint (JSON / GeoJSON / CSV,
+  no key); an in-app panel lists copyable URLs and downloads, with interactive docs at `/docs`.
+- **📖 In-app Guide** — a built-in how-to covering the pipeline, AI mapping, views, dashboard,
+  drought monitor, scheduling, and the API.
 - **WorldPop population heatmap** — 1km population grid binned to a point grid and rendered as a
   density heatmap (no GDAL/tile server), alongside tabular national totals from the World Bank.
 
@@ -107,12 +120,17 @@ For the full design, data model, API reference, and feature list, see
 - **`ingest.py`** — the trusted, spec-driven interpreter: fetch → normalize → upsert. No
   `eval`/`exec`, so AI-produced *specs* (not code) are safe to run.
 - **`worldpop.py`** — ingests WorldPop's 1km population grid as a binned point grid (heatmap).
-- **`ai.py`** — fetch a sample of an API and propose a mapping (heuristic or optional LLM).
+- **`drought.py`** — ingests Open-Meteo daily precipitation / ET0 / soil moisture per location
+  (`drought-openmeteo` source kind) — one record per location-day, powering the drought monitor.
+- **`ai.py`** — fetch a sample of an API and propose a mapping (heuristic, or optional
+  cloud **Anthropic** / local **Ollama** LLM — selected via `OPENWASHDIP_LLM_PROVIDER`).
 - **`discovery.py`** — find + verify candidate endpoints from a docs page or a name.
 - **`presets.py`** — the curated standard-source catalog.
 - **`scheduler.py`** — APScheduler with a Postgres job-store.
-- **`serve/app.py`** — FastAPI: wizard, sources, views, and unified cross-source endpoints.
+- **`serve/app.py`** — FastAPI: wizard, sources, views, unified cross-source endpoints,
+  CSV export, and the drought overview + forecast model (`/api/drought/*`).
 - **`frontend/`** — Vite + React + React Flow + ECharts UI (builds into `serve/static/`).
+  Modal views: `Dashboard.jsx`, `Drought.jsx`, `Unified.jsx`, `ApiAccess.jsx`, `Help.jsx`.
 
 ## Deploying against a remote Postgres
 
@@ -126,9 +144,13 @@ Run `uv run openwashdip initdb` once. Nothing else changes.
 
 ## Status
 
-Prototype / showcase. The connector contract, catalog, scheduling, charts, and unified view
-are functional. Predictive analytics (e.g. water-point failure-risk, time-series forecasts)
-are planned next.
+Prototype / showcase. The connector contract, catalog, scheduling, charts, unified view,
+dashboard, drought monitor, and REST/CSV API are functional. **Predictive analytics** have a
+first implementation — the drought-index 14-day forecast (least-squares trend with an
+uncertainty band). Next: anomaly-based SPI from a climatology baseline, and a water-point
+failure-risk model when WPDx data is available.
+
+A condensed presenter walkthrough is in **[DEMO-5MIN.md](DEMO-5MIN.md)**.
 
 ## License
 

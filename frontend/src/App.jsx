@@ -9,6 +9,10 @@ import { emptyPipeline, buildConfig, sourceToPipeline, sourceHasFilter, ROLE_LAB
 import Drawer from "./components/Drawer.jsx";
 import Results from "./components/Results.jsx";
 import Unified from "./components/Unified.jsx";
+import Dashboard from "./components/Dashboard.jsx";
+import Help from "./components/Help.jsx";
+import ApiAccess from "./components/ApiAccess.jsx";
+import Drought from "./components/Drought.jsx";
 
 const ORDER_BASE = ["trigger", "source", "map", "database"];
 const X0 = 60, DX = 250, Y = 150;
@@ -44,6 +48,10 @@ function Flow() {
   const [currentSourceId, setCurrentSourceId] = useState(null);
   const [catalog, setCatalog] = useState([]);
   const [showUnified, setShowUnified] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showApi, setShowApi] = useState(false);
+  const [showDrought, setShowDrought] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layout(ORDER_BASE));
   const [edges, setEdges, onEdgesChange] = useEdgesState(edgesFor(ORDER_BASE));
@@ -222,7 +230,11 @@ function Flow() {
           )}
           <button className="ghost" disabled={!currentSourceId} title="View the data this workflow pulled"
             onClick={() => { const s = sources.find((x) => x.id === currentSourceId); if (s) setResults(s); }}>📊 Data</button>
+          <button className="ghost" onClick={() => setShowDashboard(true)}>📊 Dashboard</button>
+          <button className="ghost" onClick={() => setShowDrought(true)}>🌵 Drought</button>
           <button className="ghost" onClick={() => setShowUnified(true)}>🌐 All data</button>
+          <button className="ghost" onClick={() => setShowApi(true)}>🔌 API</button>
+          <button className="ghost" onClick={() => setShowHelp(true)}>📖 Guide</button>
           <button className="ghost" onClick={tidy}>↹ Tidy</button>
           <button className="ghost" onClick={newIntegration}>+ New</button>
           <button className="run" onClick={run} disabled={running}>{running ? "Running…" : "▶ Run"}</button>
@@ -269,6 +281,18 @@ function Flow() {
 
       {results && <Results source={results} onClose={() => setResults(null)} />}
       {showUnified && <Unified onClose={() => setShowUnified(false)} />}
+      {showDashboard && (
+        <Dashboard
+          onClose={() => setShowDashboard(false)}
+          onOpenSource={(id) => {
+            const s = sources.find((x) => x.id === id);
+            if (s) { setShowDashboard(false); setCurrentSourceId(id); setResults(s); }
+          }}
+        />
+      )}
+      {showHelp && <Help onClose={() => setShowHelp(false)} />}
+      {showApi && <ApiAccess onClose={() => setShowApi(false)} />}
+      {showDrought && <Drought onClose={() => setShowDrought(false)} />}
     </div>
   );
 }

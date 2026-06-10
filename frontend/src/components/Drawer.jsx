@@ -127,9 +127,29 @@ function SourceCfg({ pipeline, setPipeline, catalog, onLoadPreset }) {
     setBusy(false);
   }
 
+  // Group the catalog by category for the dropdown (e.g. WASH, Health, Hazard, Population).
+  const grouped = catalog.reduce((acc, c) => {
+    (acc[c.category] = acc[c.category] || []).push(c);
+    return acc;
+  }, {});
+
   return (
     <>
-      <label>Data source API URL</label>
+      <label>Standard data source</label>
+      <select value="" disabled={!catalog.length}
+        onChange={(e) => { const entry = catalog.find((c) => String(c.id) === e.target.value); if (entry && onLoadPreset) onLoadPreset(entry); }}>
+        <option value="">{catalog.length ? `Choose from ${catalog.length} available sources…` : "Loading catalog…"}</option>
+        {Object.entries(grouped).map(([cat, items]) => (
+          <optgroup key={cat} label={cat}>
+            {items.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </optgroup>
+        ))}
+      </select>
+      <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+        Pick a curated, verified source to load a ready-to-run workflow — or enter a custom API URL below.
+      </div>
+
+      <label style={{ marginTop: 18 }}>Data source API URL</label>
       <input value={pipeline.source.url} placeholder={EXAMPLE}
         onChange={(e) => setPipeline({ ...pipeline, source: { ...pipeline.source, url: e.target.value } })} />
       <div className="row" style={{ marginTop: 10 }}>

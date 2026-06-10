@@ -104,10 +104,16 @@ def propose_mapping(url: str, sample: dict, params: Optional[dict] = None) -> di
     record = example[0] if example else {}
     paths = list(_flatten_keys(record).keys())
 
-    if os.environ.get("OPENWASHDIP_LLM_PROVIDER") == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
+    provider = os.environ.get("OPENWASHDIP_LLM_PROVIDER")
+    if provider == "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
         try:
             return _propose_llm(url, sample, params)
         except Exception:  # noqa: BLE001 - fall back to heuristic if the LLM call fails
+            pass
+    elif provider == "ollama":
+        try:
+            return _propose_ollama(url, sample, params)
+        except Exception:  # noqa: BLE001 - fall back to heuristic if the local model is unreachable
             pass
 
     lat = _match(paths, _LAT_KEYS)
@@ -136,29 +142,66 @@ def propose_mapping(url: str, sample: dict, params: Optional[dict] = None) -> di
     }
 
 
+def _mapping_prompt(sample: dict) -> str:
+    """The shared instruction used by every LLM backend — same schema as the heuristic."""
+    schema = [
+        "records_path", "id_path", "lat_path", "lon_path",
+        "time_path", "country_path", "property_paths",
+    ]
+    return (
+        "You map an API's JSON into a flat table. Dotted paths may index lists, e.g. "
+        "'geometry.coordinates.1'. country_path should point to a country/ISO3 code field "
+        "when one exists (else null). property_paths maps {column_name: dotted_path} for the "
+        "remaining useful fields. Given this sample, return ONLY a JSON object with keys: "
+        f"{schema}. Sample:\n{json.dumps(sample.get('preview'), default=str)[:6000]}"
+    )
+
+
+def _finish_spec(spec: dict, url: str, params: Optional[dict], proposer: str) -> dict:
+    spec.update({
+        "kind": "rest-points",
+        "request": {"url": url, "params": params or {}},
+        "_proposer": proposer,
+    })
+    return spec
+
+
 def _propose_llm(url: str, sample: dict, params: Optional[dict]) -> dict:
-    """Ask Claude to fill the mapping schema from the sample record."""
+    """Ask Claude (cloud) to fill the mapping schema from the sample record."""
     import anthropic
 
     model = os.environ.get("OPENWASHDIP_LLM_MODEL", "claude-sonnet-4-6")
     client = anthropic.Anthropic()
-    schema_hint = {
-        "records_path": "dotted path to the array of records",
-        "id_path": "dotted path to a stable unique id (or null)",
-        "lat_path": "dotted path to latitude",
-        "lon_path": "dotted path to longitude",
-        "time_path": "dotted path to a timestamp (or null)",
-        "property_paths": {"<column_name>": "<dotted path>"},
-    }
-    prompt = (
-        "You map an API's JSON into a flat table. Dotted paths may index lists, e.g. "
-        "'geometry.coordinates.1'. Given this sample, return ONLY a JSON object with keys: "
-        f"{list(schema_hint)}. Sample:\n{json.dumps(sample.get('preview'), default=str)[:6000]}"
-    )
     msg = client.messages.create(
-        model=model, max_tokens=1024, messages=[{"role": "user", "content": prompt}]
+        model=model, max_tokens=1024,
+        messages=[{"role": "user", "content": _mapping_prompt(sample)}],
     )
     txt = "".join(b.text for b in msg.content if getattr(b, "type", None) == "text")
     spec = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
-    spec.update({"kind": "rest-points", "request": {"url": url, "params": params or {}}, "_proposer": "llm"})
-    return spec
+    return _finish_spec(spec, url, params, "llm")
+
+
+def _propose_ollama(url: str, sample: dict, params: Optional[dict]) -> dict:
+    """Ask a LOCAL model via Ollama to fill the mapping schema — no key, data stays on-host.
+
+    Activate with: OPENWASHDIP_LLM_PROVIDER=ollama (+ optionally OPENWASHDIP_LLM_MODEL,
+    OPENWASHDIP_OLLAMA_URL). Requires a running Ollama with the model pulled; on any error
+    propose_mapping() falls back to the always-available heuristic.
+    """
+    base = os.environ.get("OPENWASHDIP_OLLAMA_URL", "http://localhost:11434").rstrip("/")
+    model = os.environ.get("OPENWASHDIP_LLM_MODEL", "llama3.1")
+    r = requests.post(
+        f"{base}/api/generate",
+        json={
+            "model": model,
+            "prompt": _mapping_prompt(sample),
+            "stream": False,
+            "format": "json",  # constrain Ollama to emit valid JSON
+            "options": {"temperature": 0},
+        },
+        timeout=120,
+    )
+    r.raise_for_status()
+    txt = r.json().get("response", "")
+    spec = json.loads(re.search(r"\{.*\}", txt, re.S).group(0))
+    return _finish_spec(spec, url, params, "ollama")

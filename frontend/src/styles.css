@@ -172,3 +172,108 @@ th { position: sticky; top: 0; background: var(--panel); color: var(--muted); }
 .tbtn { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 5px 10px; font-size: 12px; }
 .tbtn.on { color: #fff; background: var(--accent); border-color: var(--accent); }
 .chart-canvas { width: 100%; height: 380px; margin-top: 6px; }
+
+/* Dashboard */
+.dash-sheet { width: min(1180px, 96vw); height: min(820px, 94vh); }
+.mhead button.sm, .dash-edit button.sm { padding: 5px 9px; font-size: 12px; }
+.dash-edit { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 16px;
+  border-bottom: 1px solid var(--line); background: var(--panel2); }
+.dash-grid { flex: 1; min-height: 0; overflow: auto; padding: 14px 16px; display: grid;
+  grid-template-columns: repeat(2, 1fr); gap: 14px; align-content: start; align-items: start; }
+.dash-card { border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+  box-shadow: 0 4px 14px rgba(31,42,61,.06); display: flex; flex-direction: column; }
+.dash-card.span-2 { grid-column: span 2; }
+.dash-card.span-1 { grid-column: span 1; }
+.dash-card.editing { cursor: grab; border-style: dashed; border-color: var(--accent2); }
+.dash-card-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--line);
+  background: var(--panel2); border-radius: 12px 12px 0 0; }
+.dch-icon { font-size: 14px; }
+.dch-title { font-weight: 650; font-size: 12.5px; }
+.dch-tools { margin-left: auto; display: flex; gap: 4px; }
+.iconbtn { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 6px;
+  padding: 2px 7px; font-size: 12px; line-height: 1.2; }
+.iconbtn:hover { border-color: var(--accent); color: var(--fg); }
+/* Body sizes to its content; the whole .dash-grid scrolls (a flex:1 + overflow:auto
+   body here would have no intrinsic height and collapse the auto grid row to ~header). */
+.dash-card-body { padding: 12px; min-width: 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+.kpi { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 10px; text-align: center; }
+.kpi-val { font-size: 22px; font-weight: 700; color: var(--fg); letter-spacing: -.5px; }
+.kpi-val.ok { color: var(--ok); } .kpi-val.warn { color: var(--warn); }
+.kpi-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: 3px; }
+
+.dash-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.dash-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); padding: 5px 8px; border-bottom: 1px solid var(--line); }
+.dash-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.dash-table tr:last-child td { border-bottom: 0; }
+.dash-table tr.rowlink { cursor: pointer; }
+.dash-table tr.rowlink:hover td { background: var(--panel2); }
+.sdot-wrap { display: inline-flex; align-items: center; gap: 6px; }
+.sdot { width: 8px; height: 8px; border-radius: 50%; background: #c2ccdc; display: inline-block; }
+.sdot.ok { background: var(--ok); } .sdot.warn { background: var(--warn); } .sdot.err { background: var(--err); }
+.sdot.run { background: var(--warn); animation: pulse 1s infinite; }
+
+.chartw { display: flex; flex-direction: column; height: 280px; }
+.chartw-bar { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.chartw-bar select { width: auto; padding: 4px 7px; font-size: 12px; }
+.chartw-canvas { flex: 1; width: 100%; min-height: 240px; }
+.mapw { height: 340px; border-radius: 8px; }
+
+/* Guide (in-app docs) */
+.ghelp { flex: 1; min-height: 0; display: flex; }
+.gtoc { width: 210px; flex-shrink: 0; border-right: 1px solid var(--line); background: var(--panel2);
+  padding: 12px 10px; overflow: auto; }
+.gtoc-item { display: block; width: 100%; text-align: left; background: transparent; border: 0; color: var(--muted);
+  font-weight: 500; font-size: 13px; padding: 8px 10px; border-radius: 8px; margin-bottom: 2px; cursor: pointer; }
+.gtoc-item:hover { background: var(--panel); color: var(--fg); }
+.gtoc-item.on { background: var(--panel); color: var(--accent); font-weight: 650; }
+.gcontent { flex: 1; min-width: 0; overflow: auto; padding: 20px 26px; }
+.gcontent h2 { font-size: 18px; margin: 0 0 12px; }
+.gcontent p { margin: 0 0 12px; }
+.gcontent code { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px;
+  font-size: 12px; font-family: ui-monospace, monospace; }
+.gnote { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--fg); }
+.gflow { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+  font-size: 13px; text-align: center; margin: 0 0 14px; }
+.gsteps { margin: 0 0 12px; padding-left: 20px; }
+.gsteps li { margin-bottom: 12px; }
+.gdefs { list-style: none; margin: 0 0 12px; padding: 0; }
+.gdefs li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.gdefs li:last-child { border-bottom: 0; }
+
+/* API access panel */
+.btnlink { display: inline-flex; align-items: center; text-decoration: none; padding: 6px 12px; }
+.apipanel h3.apih { font-size: 13px; margin: 20px 0 4px; }
+.apipanel .apidesc { font-size: 12px; margin: 0 0 8px; }
+.apirow { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--panel2); margin-bottom: 6px; }
+.apimethod { font-size: 10.5px; font-weight: 700; color: var(--ok); border: 1px solid var(--line);
+  background: var(--panel); border-radius: 5px; padding: 1px 6px; flex-shrink: 0; }
+.apiurl { flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 12px; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: none; border: 0; padding: 0; }
+.apirow-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.apibtn { font-size: 11.5px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--fg); text-decoration: none; font-weight: 500; cursor: pointer; }
+.apibtn:hover { border-color: var(--accent); }
+.apisrc { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+.apisrc-head { margin-bottom: 8px; font-size: 13px; }
+.apicode { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px 14px; font-size: 12px;
+  overflow: auto; margin: 0 0 8px; }
+
+/* Drought monitor */
+.droempty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 30px; }
+.dbadge { color: #fff; font-size: 10.5px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.droalerts { display: flex; flex-direction: column; gap: 8px; }
+.droalert { border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; background: var(--panel2); }
+.droalert > div:first-child { display: flex; align-items: center; gap: 8px; }
+.forecastw { display: flex; flex-direction: column; }
+.forecastw-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.forecastw-bar select { width: auto; padding: 5px 8px; font-size: 12px; }
+.forecastw-head { font-size: 13px; }
+.forecastw-canvas { width: 100%; height: 300px; }

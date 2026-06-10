@@ -50,6 +50,9 @@ export const api = {
     return call(`/api/sources/${id}/aggregate?` + new URLSearchParams(p).toString());
   },
   geojson: (id) => call(`/api/sources/${id}/geojson`),
+  recentRuns: (limit = 20) => call(`/api/runs/recent?limit=${limit}`),
+  droughtOverview: () => call("/api/drought/overview"),
+  droughtForecast: (location) => call("/api/drought/forecast" + (location ? `?location=${encodeURIComponent(location)}` : "")),
   unifiedSummary: () => call("/api/unified/summary"),
   unifiedFilters: () => call("/api/unified/filters"),
   unifiedRecords: (q) => call("/api/unified/records?" + qs(q)),

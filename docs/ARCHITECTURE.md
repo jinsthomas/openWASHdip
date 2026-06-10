@@ -124,7 +124,9 @@ All optional and keyless by default:
 
 - **AI field mapping** (`ai.py`) — fetches a sample of an API and proposes the mapping
   (records path, id/lat/lon/time/country roles, properties) with a pure-Python heuristic.
-  An optional LLM proposer can be enabled with `OPENWASHDIP_LLM_PROVIDER=anthropic`.
+  An optional LLM proposer can be enabled with `OPENWASHDIP_LLM_PROVIDER=anthropic` (cloud
+  Claude) or `=ollama` (a **local** model, no key, data stays on-host). Any LLM error falls
+  back to the heuristic, so mapping always works.
 - **Endpoint discovery — "From a URL"** (`discovery.py`) — given a docs page or domain, it
   scrapes API-looking links, reads any OpenAPI/Swagger spec, probes common paths, and
   **verifies each candidate by fetching it** (concurrently). Only working endpoints are shown.
@@ -152,6 +154,16 @@ A single-page app built with Vite (compiles into `openwashdip/serve/static/`).
   pie, scatter, histogram, with aggregations and time bucketing.
 - **Unified "All data"** (`components/Unified.jsx`) — every source together, filtered by
   source / country / year, as a table, cross-source charts, and a source-colored map.
+- **Dashboard** (`components/Dashboard.jsx`) — a customizable widget board (KPIs, source health,
+  recent runs, charts, map); add / remove / resize / drag-reorder widgets, layout in `localStorage`.
+- **Drought monitor** (`components/Drought.jsx`) — dryness-index KPIs, a **14-day forecast model**
+  chart (history + dashed projection + uncertainty band + thresholds, per-location selector),
+  severity map, region time-series, locations table with a 7-day outlook, and alerts.
+- **API access** (`components/ApiAccess.jsx`) — copyable JSON / GeoJSON / CSV endpoint URLs per
+  source + a curl example, linking to the interactive `/docs`.
+- **Guide** (`components/Help.jsx`) — an in-app how-to with a section table-of-contents.
+
+Charts and the maps use **ECharts** and **Leaflet** (loaded globally); the canvas uses **React Flow**.
 
 ---
 
@@ -171,16 +183,23 @@ Served by FastAPI (`serve/app.py`); interactive docs at `/docs`.
 - `POST /api/sources/{id}/sync` — run a sync now.
 
 **Per-source views**
-- `GET /api/sources/{id}/records` — the standardized table.
+- `GET /api/sources/{id}/records` — the standardized table (`?format=csv` for a CSV download;
+  includes the conformed `country` column).
 - `GET /api/sources/{id}/aggregate` — GROUP BY for charts.
 - `GET /api/sources/{id}/geojson` — geometry for the map.
 - `GET /api/sources/{id}/runs` — sync history.
 
 **Unified (cross-source)**
-- `GET /api/unified/summary` · `/filters` · `/records` · `/aggregate` · `/geojson`
+- `GET /api/unified/summary` · `/filters` · `/records` (`?format=csv`) · `/aggregate` · `/geojson`
   (all filterable by source / country / year).
 
-`GET /healthz` for liveness; `GET /` serves the SPA.
+**Dashboard & drought**
+- `GET /api/runs/recent` — most recent sync runs across all sources (dashboard feed).
+- `GET /api/drought/overview` — per-location dryness index, region series, alerts, 7-day outlook.
+- `GET /api/drought/forecast?location=` — least-squares trend model: index history +
+  `trend_fit` + a 14-day `forecast` with `lo`/`hi` band, plus Moderate/Severe crossing dates.
+
+`GET /healthz` for liveness; `GET /` serves the SPA (with `Cache-Control: no-store`).
 
 ---
 
@@ -220,10 +239,12 @@ population-density map. Full-resolution raster *layers* remain a possible future
 
 ## 12. Roadmap
 
-- **Predictive / prescriptive analytics** *(in progress)* — an **access-gap analysis**
-  combining WorldPop population with health facilities (PostGIS nearest-neighbor) to surface
-  underserved high-population areas ("where to build the next clinic"). A water-point
-  failure-risk model is the alternative when WPDx is available.
+- **Predictive analytics** — *first cut shipped:* the **drought-index 14-day forecast**
+  (`/api/drought/forecast`) — a least-squares trend over the rolling index with an uncertainty
+  band and threshold crossings. *Next:* anomaly-based **SPI** from a climatology baseline,
+  Holt's exponential smoothing, a water-point **failure-risk** model (when WPDx is available),
+  and an **access-gap analysis** combining WorldPop population with health facilities (PostGIS
+  nearest-neighbor) to surface underserved high-population areas.
 - **More source shapes** — pagination, CSV/Parquet, authenticated APIs.
 - **Incremental sync** — upsert by `external_id` instead of full replace.
 - **Filtering World Bank regional aggregates** to actual countries.

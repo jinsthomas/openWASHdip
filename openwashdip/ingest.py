@@ -55,10 +55,15 @@ def _coerce_time(value) -> Optional[datetime]:
     if value is None:
         return None
     try:
+        s = str(value).strip()
+        # Bare 4-digit year (e.g. World Bank's "2022") -> Jan 1 of that year, so annual
+        # datasets get a real event_time and the time dimension/charts work.
+        if len(s) == 4 and s.isdigit() and 1500 <= int(s) <= 2500:
+            return datetime(int(s), 1, 1, tzinfo=timezone.utc)
         if isinstance(value, (int, float)):
             secs = value / 1000.0 if value > 1e11 else float(value)
             return datetime.fromtimestamp(secs, tz=timezone.utc)
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
     except (ValueError, OSError, OverflowError):
         return None
 
@@ -160,6 +165,10 @@ def pull(config: dict, session: Optional[requests.Session] = None, limit: Option
         from .worldpop import pull_worldpop_grid
 
         return pull_worldpop_grid(config, limit=limit)
+    if config.get("kind") == "drought-openmeteo":
+        from .drought import pull_drought
+
+        return pull_drought(config, limit=limit)
     return pull_records(config, session=session, limit=limit)
 
 

@@ -104,6 +104,31 @@ CATALOG: list[dict] = [
         },
     },
     {
+        "id": "drought-southern-africa",
+        "name": "Drought — Southern Africa (Open-Meteo)",
+        "category": "Drought",
+        "description": "Daily precipitation, evapotranspiration and soil moisture for drought-prone districts in Madagascar & Angola (Open-Meteo, no key). Powers the 🌵 Drought view.",
+        "slug": "drought-southern-africa",
+        "keywords": ["drought", "precipitation", "rainfall", "soil moisture", "evapotranspiration", "spi", "dry", "water balance", "open-meteo"],
+        "config": {
+            "kind": "drought-openmeteo",
+            "past_days": 60,
+            "forecast_days": 7,
+            # Drought-prone districts: Madagascar's Grand Sud + Angola's Cunene/Huíla,
+            # with each capital as a wetter reference point.
+            "locations": [
+                {"iso3": "MDG", "name": "Ambovombe", "lat": -25.17, "lon": 46.08},
+                {"iso3": "MDG", "name": "Toliara", "lat": -23.35, "lon": 43.67},
+                {"iso3": "MDG", "name": "Betioky", "lat": -23.72, "lon": 44.38},
+                {"iso3": "MDG", "name": "Antananarivo", "lat": -18.88, "lon": 47.51},
+                {"iso3": "AGO", "name": "Ondjiva", "lat": -17.07, "lon": 15.73},
+                {"iso3": "AGO", "name": "Lubango", "lat": -14.92, "lon": 13.49},
+                {"iso3": "AGO", "name": "Namibe", "lat": -15.20, "lon": 12.15},
+                {"iso3": "AGO", "name": "Luanda", "lat": -8.84, "lon": 13.23},
+            ],
+        },
+    },
+    {
         "id": "worldbank-population",
         "name": "World Bank — Population by country",
         "category": "Population",
@@ -121,7 +146,12 @@ CATALOG: list[dict] = [
             "lon_path": "",
             "country_path": "countryiso3code",
             "time_path": "date",
-            "property_paths": {"population": "value", "country_name": "country.value"},
+            "property_paths": {
+                "iso3": "countryiso3code",
+                "year": "date",
+                "population": "value",
+                "country_name": "country.value",
+            },
         },
     },
     {
